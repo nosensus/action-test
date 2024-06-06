@@ -29,7 +29,7 @@ jobs:
 
     - name: Update package version
       env:
-        GH_PAT: ${{ secrets.PAT2 }}
+        PAT2: ${{ secrets.PAT2 }}
       run: |
         npm version patch --no-git-tag-version
         git config --global user.name 'github-actions[bot]'
