@@ -28,6 +28,8 @@ jobs:
         node-version: '20'  # Вы можете выбрать любую другую версию Node.js
 
     - name: Update package version
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
       run: |
         npm version patch --no-git-tag-version
         git config --global user.name 'github-actions[bot]'
