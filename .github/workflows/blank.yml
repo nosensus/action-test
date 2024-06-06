@@ -35,7 +35,3 @@ jobs:
         git add package.json
         git commit -m 'ci: bump version to ${{ steps.update-version.outputs.new_version }}'
         git push
-
-    outputs:
-      new_version:
-        value: ${{ steps.update-version.outputs.new_version }}
