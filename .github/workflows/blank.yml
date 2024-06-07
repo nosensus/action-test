@@ -3,37 +3,71 @@
 name: CI
 
 # Controls when the workflow will run
+# on:
+#   # Triggers the workflow on push or pull request events but only for the "main" branch
+#   push:
+#     branches: [ "main" ]
+#   pull_request:
+#     branches: [ "main" ]
+
+#   # Allows you to run this workflow manually from the Actions tab
+#   workflow_dispatch:
+
+# # A workflow run is made up of one or more jobs that can run sequentially or in parallel
+# jobs:
+#   update-version:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#     - name: Checkout repository
+#       uses: actions/checkout@v2
+
+#     - name: Set up Node.js
+#       uses: actions/setup-node@v2
+#       with:
+#         node-version: '20'  # Вы можете выбрать любую другую версию Node.js
+
+#     - name: Update package version
+#       env:
+#         ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+#       run: |
+#         npm version patch --no-git-tag-version
+#         git config --global user.name 'github-actions[bot]'
+#         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+#         git add package.json
+#         git commit -m 'ci: bump version to ${{ steps.update-version.outputs.new_version }}'
+#         git push https://nosensus:${{ secrets.ACCESS_TOKEN }}@github.com/nosensus/action-test.git
+
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  release:
+    types: [published]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  update-version:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '20'  # Вы можете выбрать любую другую версию Node.js
+      - name: Extract version from tag
+        id: extract_version
+        run: echo "::set-output name=version::${GITHUB_REF#refs/tags/}"
 
-    - name: Update package version
-      env:
-        ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-      run: |
-        npm version patch --no-git-tag-version
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add package.json
-        git commit -m 'ci: bump version to ${{ steps.update-version.outputs.new_version }}'
-        git push https://nosensus:${{ secrets.ACCESS_TOKEN }}@github.com/nosensus/action-test.git
+      - name: Update package version
+        run: |
+          NEW_VERSION=${{ steps.extract_version.outputs.version }}
+          jq --arg new_version "$NEW_VERSION" '.version = $new_version' package.json > tmp.json && mv tmp.json package.json
+          cat package.json
+
+      - name: Commit and push changes
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add package.json
+          
+          git commit -m "ci: update version to ${{ steps.extract_version.outputs.version }}"
+          git push https://nosensus:${{ secrets.ACCESS_TOKEN }}@github.com/nosensus/action-test.git
