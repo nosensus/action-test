@@ -1,4 +1,4 @@
-# This is a basic workflow to help you get started with Actions
+D# This is a basic workflow to help you get started with Actions
 
 name: CI
 
@@ -70,4 +70,4 @@ jobs:
           git add package.json
           
           git commit -m "ci: update version to ${{ steps.extract_version.outputs.version }}"
-          git push https://nosensus:${{ secrets.ACCESS_TOKEN }}@github.com/nosensus/action-test.git
+          git push https://nosensus:${{ secrets.ACCESS_TOKEN }}@github.com/nosensus/action-test.git HEAD:main
